@@ -160,6 +160,15 @@ services:
       - kibana
       - grafana
 
+  update:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=update.supergreenlab.com
+    volumes:
+      - ./update:/usr/share/nginx/html
+    networks:
+      - front-tier
+
   dockergen:
     image: jwilder/docker-gen
     command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
