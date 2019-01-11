@@ -1,5 +1,18 @@
 ![SuperGreenLab](assets/sgl.png?raw=true "SuperGreenLab")
 
+Table of Contents
+=================
+
+   * [SuperGreenCloud](#supergreencloud)
+      * [Features](#features)
+      * [TODO](#todo)
+   * [Quickstart](#quickstart)
+      * [Configuration](#configuration)
+      * [Installation](#installation)
+      * [Attach firmware](#attach-firmware)
+      * [View logs remotely](#view-logs-remotely)
+      * [Graphs, Dashboards and monitoring](#graphs-dashboards-and-monitoring)
+
 # SuperGreenCloud
 
 Collection of pre-configured softwares to run the [SuperGreenOS's](https://github.com/supergreenlab/SuperGreenOS) cloud.
