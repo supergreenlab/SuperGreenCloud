@@ -67,7 +67,7 @@ When ran locally you might want to have the ports of each services accessible di
 
 ## Attach firmware
 
-In your firmware intance, set the `BROKER_URL` value through the [http API](https://github.com/supergreenlab/SuperGreenOSBoilerplate#http-access) to point to your installation, be sure to have configured the wifi access.
+In your firmware intance, set the `BROKER_URL` value through the [http API](https://github.com/supergreenlab/SuperGreenOSBoilerplate#http-access) to point to your installation, be sure to have configured the [wifi access](https://github.com/supergreenlab/SuperGreenOSBoilerplate#wifi-configuration).
 
 Should be somehting like `mqtt://sink.supergreenlab.com:1883`. (If running locally, use your IP address, whatever the domain you set in `docker-compose.yml`)
 
