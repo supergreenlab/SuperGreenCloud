@@ -36,6 +36,7 @@ There's not much to configure:
 
 - mqtt login/pass: search for `mqtt_username` and `mqtt_password` in docker-compose.
 - domain names used: search for `VIRTUAL_HOST` in docker-compose
+- http access passwords in `nginx/htpasswd/`
 
 ## Installation
 
@@ -85,6 +86,11 @@ firmware -> MQTT -> post-processor -> Prometheus
 
 So we're ready to view our data as graphs.
 
-Just point to the URL you specified in your `docker-compose.yml`, if you left the default, you'll have `grafana.supergreenlab.com`, DON'T FORGET TO ADD IT TO YOUR `/etc/hosts` OR THAT WON'T BE WHAT YOU THINK IT BE.
+Just point to the URL you specified in your `docker-compose.yml` with your browser, if you left the default, you'll have `grafana.supergreenlab.com`, DON'T FORGET TO ADD IT TO YOUR `/etc/hosts` OR THAT WON'T BE WHAT YOU THINK IT BE.
 
-Now everthing should me setup for you to start their tutorial from [this section](http://docs.grafana.org/guides/getting_started/#dashboards-panels-the-building-blocks-of-grafana).
+Default access are:
+
+- login: `supergreen`
+- password: `multipass`
+
+Now everthing should be setup for you to start their tutorial from [this section](http://docs.grafana.org/guides/getting_started/#dashboards-panels-the-building-blocks-of-grafana).
