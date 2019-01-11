@@ -17,6 +17,8 @@ Table of Contents
 
 Collection of pre-configured softwares to run the [SuperGreenOS's](https://github.com/supergreenlab/SuperGreenOS) cloud.
 
+![ScreenShot](assets/screenshot.png?raw=true "Screenshot")
+
 ## Features
 
 - Everything in a `docker-compose.yml` for easy deployement
