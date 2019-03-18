@@ -5,7 +5,6 @@ volumes:
     grafana_data: {}
     redis_data: {}
     mosquitto_data: {}
-    elastic_data: {}
     docker_gen: {}
 
 networks:
@@ -29,7 +28,10 @@ services:
       - alertmanager:alertmanager
     depends_on:
       - cadvisor
+    ports:
+      - 9090:9090
     networks:
+      - front-tier
       - back-tier
     restart: always
 
@@ -84,7 +86,6 @@ services:
       - ./grafana/config.monitoring
     networks:
       - back-tier
-      - front-tier
     restart: always
 
   supergreenlog:
@@ -95,7 +96,16 @@ services:
     depends_on:
       - redis
       - mqtt
-      - elastic
+    networks:
+      - back-tier
+    restart: always
+
+  supergreenpromproxy:
+    image: supergreenlab/supergreenpromproxy
+    environment:
+      - VIRTUAL_HOST=metrics.supergreenlab.com
+    depends_on:
+      - prometheus
     networks:
       - back-tier
     restart: always
@@ -122,29 +132,6 @@ services:
       - ./mosquitto:/mosquitto/config
       - mosquitto_data:/mosquitto/data
 
-  elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
-    restart: always
-    #    ports:
-    #      - 9200:9200
-    #      - 9300:9300
-    networks:
-      - back-tier
-    volumes:
-      - ./elasticsearch:/usr/share/elasticsearch/config
-      - elastic_data:/usr/share/elasticsearch/data 
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:6.4.2
-    restart: always
-    environment:
-      - VIRTUAL_HOST=kibana.supergreenlab.com
-    networks:
-      - back-tier
-      - front-tier
-    volumes:
-      - ./kibana:/usr/share/kibana/config
-
   update:
     image: nginx
     environment:
@@ -152,7 +139,16 @@ services:
     volumes:
       - ./update:/usr/share/nginx/html
     networks:
-      - front-tier
+      - back-tier
+
+  app:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=app.supergreenlab.com
+    volumes:
+      - ./controller:/usr/share/nginx/html
+    networks:
+      - back-tier
 
   nginx:
     image: nginx
@@ -164,9 +160,9 @@ services:
       - ./nginx/htpasswd:/etc/nginx/htpasswd
     networks:
       - front-tier
+      - back-tier
     depends_on:
       - dockergen
-      - kibana
       - grafana
 
   dockergen:
@@ -179,6 +175,6 @@ services:
       - ./nginx/htpasswd:/etc/nginx/htpasswd
     networks:
       - front-tier
+      - back-tier
     depends_on:
-      - kibana
       - grafana
