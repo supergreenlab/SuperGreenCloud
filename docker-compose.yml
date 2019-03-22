@@ -150,6 +150,15 @@ services:
     networks:
       - back-tier
 
+  app:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=live.supergreenlab.com
+    volumes:
+      - ./live:/usr/share/nginx/html
+    networks:
+      - back-tier
+
   nginx:
     image: nginx
     ports:
