@@ -150,7 +150,7 @@ services:
     networks:
       - back-tier
 
-  app:
+  live:
     image: nginx
     environment:
       - VIRTUAL_HOST=live.supergreenlab.com
@@ -167,12 +167,17 @@ services:
     volumes:
       - docker_gen:/etc/nginx/conf.d
       - ./nginx/htpasswd:/etc/nginx/htpasswd
+      - ./nginx/certs:/etc/nginx/certs
     networks:
       - front-tier
       - back-tier
     depends_on:
       - dockergen
       - grafana
+      - app
+      - update
+      - supergreenpromproxy
+      - live
 
   dockergen:
     image: jwilder/docker-gen
@@ -182,8 +187,13 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
       - ./nginx/htpasswd:/etc/nginx/htpasswd
+      - ./nginx/certs:/etc/nginx/certs
     networks:
       - front-tier
       - back-tier
     depends_on:
       - grafana
+      - app
+      - update
+      - supergreenpromproxy
+      - live
