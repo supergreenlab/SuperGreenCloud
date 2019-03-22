@@ -178,6 +178,7 @@ services:
       - update
       - supergreenpromproxy
       - live
+      - dockergen
 
   dockergen:
     image: jwilder/docker-gen
