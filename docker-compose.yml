@@ -168,6 +168,7 @@ services:
       - docker_gen:/etc/nginx/conf.d
       - ./nginx/htpasswd:/etc/nginx/htpasswd
       - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
     networks:
       - front-tier
       - back-tier
