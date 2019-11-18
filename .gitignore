@@ -1,1 +1,11 @@
-*.prod.*
+config.production/*
+config.development/*
+
+env.development
+env.production
+
+sync.sh
+
+www/update/*
+www/controller/*
+www/live/*

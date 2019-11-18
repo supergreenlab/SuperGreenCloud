@@ -1,0 +1,7 @@
+# MQTTServer = ""
+# MQTTTopic = ""
+# MQTTClientID = ""
+MQTTUsername = "supergreen"
+MQTTPassword = "multipass"
+
+# RedisURL = ""

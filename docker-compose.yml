@@ -16,7 +16,7 @@ services:
   prometheus:
     image: prom/prometheus
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - ./config/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -31,7 +31,6 @@ services:
     ports:
       - 9090:9090
     networks:
-      - front-tier
       - back-tier
     restart: always
 
@@ -53,7 +52,7 @@ services:
   alertmanager:
     image: prom/alertmanager
     volumes:
-      - ./alertmanager/:/etc/alertmanager/
+      - ./config/alertmanager:/etc/alertmanager
     networks:
       - back-tier
     restart: always
@@ -76,39 +75,47 @@ services:
     image: grafana/grafana
     # user: "104"
     environment:
-      - VIRTUAL_HOST=grafana.supergreenlab.com
+      - VIRTUAL_HOST=${GRAFANA_HOST}
     depends_on:
       - prometheus
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
     env_file:
-      - ./grafana/config.monitoring
+      - ./config/grafana/config.monitoring
     networks:
       - back-tier
     restart: always
 
-  supergreenlog:
-    image: supergreenlab/supergreenlog
-    command:
-      - '-mqtt_username=supergreen'
-      - '-mqtt_password=multipass'
-    depends_on:
-      - redis
-      - mqtt
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - docker_gen:/etc/nginx/conf.d
+      - ./config/nginx/htpasswd:/etc/nginx/htpasswd
+      - ./config/nginx/certs:/etc/nginx/certs
+      - ./config/nginx/vhost.d:/etc/nginx/vhost.d
     networks:
+      - front-tier
       - back-tier
-    restart: always
+    depends_on:
+      - dockergen
 
-  supergreenpromproxy:
-    image: supergreenlab/supergreenpromproxy
-    environment:
-      - VIRTUAL_HOST=metrics.supergreenlab.com
-    depends_on:
-      - prometheus
+  dockergen:
+    image: jwilder/docker-gen
+    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+    volumes:
+      - docker_gen:/etc/nginx/conf.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./config/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+      - ./config/nginx/htpasswd:/etc/nginx/htpasswd
+      - ./config/nginx/certs:/etc/nginx/certs
+      - ./config/nginx/vhost.d:/etc/nginx/vhost.d
     networks:
+      - front-tier
       - back-tier
-    restart: always
 
   redis:
     image: redis
@@ -129,72 +136,100 @@ services:
       - back-tier
       - front-tier
     volumes:
-      - ./mosquitto:/mosquitto/config
+      - ./config/mosquitto:/mosquitto/config
       - mosquitto_data:/mosquitto/data
+
+# HTTP Services
 
   update:
     image: nginx
     environment:
-      - VIRTUAL_HOST=update.supergreenlab.com
+      - VIRTUAL_HOST=${UPDATE_HOST}
     volumes:
-      - ./update:/usr/share/nginx/html
+      - ./www/update:/usr/share/nginx/html
     networks:
       - back-tier
 
-  app:
+  controller:
     image: nginx
     environment:
-      - VIRTUAL_HOST=app.supergreenlab.com
+      - VIRTUAL_HOST=${CONTROLLER_HOST}
     volumes:
-      - ./controller:/usr/share/nginx/html
+      - ./www/controller:/usr/share/nginx/html
     networks:
       - back-tier
 
   live:
     image: nginx
     environment:
-      - VIRTUAL_HOST=live.supergreenlab.com
+      - VIRTUAL_HOST=${LIVE_HOST}
     volumes:
-      - ./live:/usr/share/nginx/html
+      - ./www/live:/usr/share/nginx/html
     networks:
       - back-tier
 
-  nginx:
-    image: nginx
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - docker_gen:/etc/nginx/conf.d
-      - ./nginx/htpasswd:/etc/nginx/htpasswd
-      - ./nginx/certs:/etc/nginx/certs
-      - ./nginx/vhost.d:/etc/nginx/vhost.d
-    networks:
-      - front-tier
-      - back-tier
-    depends_on:
-      - dockergen
-      - grafana
-      - app
-      - update
-      - supergreenpromproxy
-      - live
+# Backend
 
-  dockergen:
-    image: jwilder/docker-gen
-    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
-    volumes:
-      - docker_gen:/etc/nginx/conf.d
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
-      - ./nginx/htpasswd:/etc/nginx/htpasswd
-      - ./nginx/certs:/etc/nginx/certs
-    networks:
-      - front-tier
-      - back-tier
+  mqttparser:
+    image: supergreenlab/mqttparser
     depends_on:
-      - grafana
-      - app
-      - update
-      - supergreenpromproxy
-      - live
+      - redis
+      - mqtt
+    networks:
+      - back-tier
+    volumes:
+      - ./config/mqttparser:/etc/mqttparser
+    restart: always
+
+  appbackend:
+    image: supergreenlab/appbackend
+    environment:
+      - VIRTUAL_HOST=${APPBACKEND_HOST}
+    depends_on:
+      - prometheus
+    networks:
+      - back-tier
+    volumes:
+      - ./config/appbackend:/etc/appbackend
+    restart: always
+
+  webbackend:
+    image: supergreenlab/webbackend
+    environment:
+      - VIRTUAL_HOST=${WEBBACKEND_HOST}
+    networks:
+      - back-tier
+    volumes:
+      - ./config/webbackend:/etc/webbackend
+    restart: always
+
+  towelie:
+    image: supergreenlab/towelie
+    environment:
+      - VIRTUAL_HOST=${TOWELIE_HOST}
+    networks:
+      - back-tier
+    volumes:
+      - ./config/towelie:/etc/towelie
+    restart: always
+
+# Legacy Backend
+
+  supergreenpromproxy:
+    image: supergreenlab/supergreenpromproxy
+    environment:
+      - VIRTUAL_HOST=${SUPERGREENPROMPROXY_HOST}
+    depends_on:
+      - prometheus
+    networks:
+      - back-tier
+    restart: always
+
+  discord:
+    image: supergreenlab/supergreendiscordcommunity              
+    env_file:
+      - ./config/discord/env
+    environment:
+      - VIRTUAL_HOST=${DISCORD_HOST}
+    networks:
+      - back-tier

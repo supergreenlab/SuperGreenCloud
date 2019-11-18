@@ -83,7 +83,7 @@ The first thing we can do is view the MQTT broker's logs coming inside our log p
 
 ```sh
 
-docker attach --no-stdin --sig-proxy=false supergreencloud_supergreenlog_1
+docker attach --no-stdin --sig-proxy=false supergreencloud_mqttparser_1
 
 ```
 
