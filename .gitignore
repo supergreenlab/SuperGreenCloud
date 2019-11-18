@@ -7,5 +7,8 @@ env.production
 sync.sh
 
 www/update/*
+!www/update/.gitkeep
 www/controller/*
+!www/controller/.gitkeep
 www/live/*
+!www/live/.gitkeep
