@@ -100,8 +100,6 @@ services:
     networks:
       - front-tier
       - back-tier
-    depends_on:
-      - dockergen
 
   dockergen:
     image: jwilder/docker-gen
@@ -116,6 +114,8 @@ services:
     networks:
       - front-tier
       - back-tier
+    depends_on:
+      - nginx
 
   redis:
     image: redis
@@ -167,6 +167,16 @@ services:
       - ./www/live:/usr/share/nginx/html
     networks:
       - back-tier
+
+  livecam:
+    image: supergreenlab/livecam
+    environment:
+      - VIRTUAL_HOST=${LIVECAM_HOST}
+    networks:
+      - back-tier
+    volumes:
+      - ./config/livecam:/etc/livecam
+    restart: always
 
 # Backend
 

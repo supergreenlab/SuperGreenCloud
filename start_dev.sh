@@ -6,7 +6,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 
-services=`docker-compose config --services`
+services=`env $(cat env.development) docker-compose config --services`
 filter="$@"
 if [ "$#" -gt 1 ]; then
   filter=`echo -n "$@" | sed -n -e 's/ /|/pg'`
