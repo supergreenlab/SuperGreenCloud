@@ -4,8 +4,10 @@ volumes:
     prometheus_data: {}
     grafana_data: {}
     redis_data: {}
+    postgres_data: {}
     mosquitto_data: {}
     docker_gen: {}
+    minio_data: {}
 
 networks:
   front-tier:
@@ -122,8 +124,16 @@ services:
     volumes:
       - redis_data:/data
     restart: always
-    #    ports:
-    #      - 6379:6379
+    networks:
+      - back-tier
+
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
     networks:
       - back-tier
 
@@ -139,12 +149,30 @@ services:
       - ./config/mosquitto:/mosquitto/config
       - mosquitto_data:/mosquitto/data
 
+  minio:
+    image: minio/minio
+    restart: always
+    environment:
+      - VIRTUAL_HOST=${MINIO_HOST}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    command: server /data
+    networks:
+      - back-tier
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 # HTTP Services
 
   update:
     image: nginx
     environment:
-      - VIRTUAL_HOST=${UPDATE_HOST}
+      - VIRTUAL_HOST=${UPDATE_HOST},${SSLUPDATE_HOST}
     volumes:
       - ./www/update:/usr/share/nginx/html
     networks:
@@ -177,6 +205,16 @@ services:
     volumes:
       - ./config/livecam:/etc/livecam
     restart: always
+
+  upgrader:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=${UPGRADER_HOST}
+    volumes:
+      - ./www/upgrader:/usr/share/nginx/html
+    networks:
+      - back-tier
+
 
 # Backend
 
@@ -221,6 +259,16 @@ services:
       - back-tier
     volumes:
       - ./config/towelie:/etc/towelie
+    restart: always
+
+  tipbackend:
+    image: supergreenlab/tipbackend
+    environment:
+      - VIRTUAL_HOST=${TIPBACKEND_HOST}
+    networks:
+      - back-tier
+    volumes:
+      - ./config/tipbackend:/etc/tipbackend
     restart: always
 
 # Legacy Backend
