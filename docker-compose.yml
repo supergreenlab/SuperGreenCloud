@@ -23,6 +23,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=36w'
+      - '--web.enable-admin-api'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     links:
@@ -30,8 +32,6 @@ services:
       - alertmanager:alertmanager
     depends_on:
       - cadvisor
-    ports:
-      - 9090:9090
     networks:
       - back-tier
     restart: always
