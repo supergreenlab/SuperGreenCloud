@@ -232,6 +232,7 @@ services:
   appbackend:
     image: supergreenlab/appbackend
     environment:
+      - VIRTUAL_PORT=8080
       - VIRTUAL_HOST=${APPBACKEND_HOST}
     depends_on:
       - prometheus

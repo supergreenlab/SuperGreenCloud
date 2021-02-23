@@ -66,3 +66,18 @@ scrape_configs:
 
     static_configs:
          - targets: ['mqttparser:8080']
+
+  - job_name: 'appbackend'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+         - targets: ['appbackend:8081']
+
+  - job_name: minio-job
+    # bearer_token: # TODO
+    metrics_path: /minio/prometheus/metrics
+    scheme: http
+    static_configs:
+      - targets: ['minio:9000']
