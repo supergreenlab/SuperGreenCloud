@@ -11,7 +11,13 @@ volumes:
 
 networks:
   front-tier:
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
   back-tier:
+    ipam:
+      config:
+        - subnet: 172.24.0.0/16
 
 services:
 
@@ -33,7 +39,8 @@ services:
     depends_on:
       - cadvisor
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.2
     restart: always
 
   node-exporter:
@@ -48,7 +55,8 @@ services:
       - '--collector.filesystem.ignored-mount-points'
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.3
     restart: always
 
   alertmanager:
@@ -56,7 +64,8 @@ services:
     volumes:
       - ./config/alertmanager:/etc/alertmanager
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.4
     restart: always
     command:
       - '--config.file=/etc/alertmanager/config.yml'
@@ -70,7 +79,8 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.5
     restart: always
 
   grafana:
@@ -86,7 +96,8 @@ services:
     env_file:
       - ./config/grafana/config.monitoring
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.6
     restart: always
 
   nginx:
@@ -100,8 +111,10 @@ services:
       - ./config/nginx/certs:/etc/nginx/certs
       - ./config/nginx/vhost.d:/etc/nginx/vhost.d
     networks:
-      - front-tier
-      - back-tier
+      front-tier:
+        ipv4_address: 172.25.0.2
+      back-tier:
+        ipv4_address: 172.24.0.7
 
   dockergen:
     image: jwilder/docker-gen
@@ -114,8 +127,10 @@ services:
       - ./config/nginx/certs:/etc/nginx/certs
       - ./config/nginx/vhost.d:/etc/nginx/vhost.d
     networks:
-      - front-tier
-      - back-tier
+      front-tier:
+        ipv4_address: 172.25.0.3
+      back-tier:
+        ipv4_address: 172.24.0.8
     depends_on:
       - nginx
 
@@ -125,7 +140,8 @@ services:
       - redis_data:/data
     restart: always
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.9
 
   postgres:
     image: postgres
@@ -135,7 +151,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: always
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.10
 
   mqtt:
     image: eclipse-mosquitto
@@ -143,8 +160,10 @@ services:
     ports:
       - 1883:1883
     networks:
-      - back-tier
-      - front-tier
+      back-tier:
+        ipv4_address: 172.24.0.11
+      front-tier:
+        ipv4_address: 172.25.0.4
     volumes:
       - ./config/mosquitto:/mosquitto/config
       - mosquitto_data:/mosquitto/data
@@ -160,12 +179,23 @@ services:
       - minio_data:/data
     command: server /data
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.12
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
+
+  nginx-prometheus-exporter:
+    image: nginx/nginx-prometheus-exporter
+    restart: always
+    command:
+      - '-nginx.scrape-uri'
+      - 'http://172.24.0.7:8080/stub_status'
+    networks:
+      back-tier:
+        ipv4_address: 172.24.0.13
 
 # HTTP Services
 
@@ -176,7 +206,8 @@ services:
     volumes:
       - ./www/update:/usr/share/nginx/html
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.14
 
   controller:
     image: nginx
@@ -185,7 +216,8 @@ services:
     volumes:
       - ./www/controller:/usr/share/nginx/html
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.15
 
   live:
     image: nginx
@@ -194,14 +226,16 @@ services:
     volumes:
       - ./www/live:/usr/share/nginx/html
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.16
 
   livecam:
     image: supergreenlab/livecam
     environment:
       - VIRTUAL_HOST=${LIVECAM_HOST}
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.17
     volumes:
       - ./config/livecam:/etc/livecam
     restart: always
@@ -213,7 +247,8 @@ services:
     volumes:
       - ./www/upgrader:/usr/share/nginx/html
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.18
 
 
 # Backend
@@ -224,7 +259,8 @@ services:
       - redis
       - mqtt
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.20
     volumes:
       - ./config/mqttparser:/etc/mqttparser
     restart: always
@@ -237,7 +273,8 @@ services:
     depends_on:
       - prometheus
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.21
     volumes:
       - ./config/appbackend:/etc/appbackend
     restart: always
@@ -247,7 +284,8 @@ services:
     environment:
       - VIRTUAL_HOST=${WEBBACKEND_HOST}
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.22
     volumes:
       - ./config/webbackend:/etc/webbackend
     restart: always
@@ -257,7 +295,8 @@ services:
     environment:
       - VIRTUAL_HOST=${TOWELIE_HOST}
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.23
     volumes:
       - ./config/towelie:/etc/towelie
     restart: always
@@ -267,7 +306,8 @@ services:
     environment:
       - VIRTUAL_HOST=${TIPBACKEND_HOST}
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.24
     volumes:
       - ./config/tipbackend:/etc/tipbackend
     restart: always
@@ -281,7 +321,8 @@ services:
     depends_on:
       - prometheus
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.25
     restart: always
 
   discord:
@@ -291,4 +332,5 @@ services:
     environment:
       - VIRTUAL_HOST=${DISCORD_HOST}
     networks:
-      - back-tier
+      back-tier:
+        ipv4_address: 172.24.0.26

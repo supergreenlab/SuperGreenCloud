@@ -75,6 +75,14 @@ scrape_configs:
     static_configs:
          - targets: ['appbackend:8081']
 
+  - job_name: 'nginx-prometheus-exporter'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+         - targets: ['nginx-prometheus-exporter:9113']
+
   - job_name: minio-job
     # bearer_token: # TODO
     metrics_path: /minio/prometheus/metrics
