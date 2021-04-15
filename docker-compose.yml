@@ -8,6 +8,7 @@ volumes:
     mosquitto_data: {}
     docker_gen: {}
     minio_data: {}
+    nginx_logs: {}
 
 networks:
   front-tier:
@@ -23,7 +24,7 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=36w'
+      - '--storage.tsdb.retention.time=12w'
       - '--web.enable-admin-api'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
@@ -73,6 +74,16 @@ services:
       - back-tier
     restart: always
 
+  prometheus-nginxlog-exporter:
+    image: quay.io/martinhelmich/prometheus-nginxlog-exporter
+    restart: always
+    command:
+      - '/nginx_logs/access.log'
+    volumes:
+      - nginx_logs:/nginx_logs
+    networks:
+      - back-tier
+
   grafana:
     image: grafana/grafana
     # user: "104"
@@ -99,6 +110,7 @@ services:
       - ./config/nginx/htpasswd:/etc/nginx/htpasswd
       - ./config/nginx/certs:/etc/nginx/certs
       - ./config/nginx/vhost.d:/etc/nginx/vhost.d
+      - nginx_logs:/nginx_logs
     networks:
       - front-tier
       - back-tier
@@ -166,6 +178,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
 
 # HTTP Services
 

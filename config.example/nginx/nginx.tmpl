@@ -59,11 +59,16 @@ map $scheme $proxy_x_forwarded_ssl {
 
 gzip_types text/plain text/css application/javascript application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
 
-log_format vhost '$host $remote_addr - $remote_user [$time_local] '
+log_format vhost '$remote_addr - $remote_user [$time_local] '
                  '"$request" $status $body_bytes_sent '
-                 '"$http_referer" "$http_user_agent"';
+                 '"$http_referer" "$http_user_agent" "$http_x_forwarded_for" '
+                 'rt=$request_time uct="$upstream_connect_time" uht="$upstream_header_time" urt="$upstream_response_time"';
 
-access_log off;
+# log_format vhost '$host $remote_addr - $remote_user [$time_local] '
+#                  '"$request" $status $body_bytes_sent '
+#                  '"$http_referer" "$http_user_agent"';
+
+# access_log off;
 
 {{ if $.Env.RESOLVERS }}
 resolver {{ $.Env.RESOLVERS }};
@@ -95,7 +100,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:80;
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 	return 503;
 }
 
@@ -106,7 +111,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:443 ssl http2;
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 	return 503;
 
 	ssl_session_tickets off;
@@ -197,7 +202,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:80 {{ $default_server }};
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 	return 301 https://$host$request_uri;
 }
 {{ end }}
@@ -208,7 +213,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:443 ssl http2 {{ $default_server }};
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 
 	{{ if eq $network_tag "internal" }}
 	# Only allow traffic from internal clients
@@ -306,7 +311,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:80 {{ $default_server }};
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 
 	{{ if eq $network_tag "internal" }}
 	# Only allow traffic from internal clients
@@ -349,7 +354,7 @@ server {
 	{{ if $enable_ipv6 }}
 	listen [::]:443 ssl http2 {{ $default_server }};
 	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
+	access_log /nginx_logs/access.log vhost;
 	return 500;
 
 	ssl_certificate /etc/nginx/certs/default.crt;
