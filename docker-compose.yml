@@ -30,7 +30,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     links:
       - cadvisor:cadvisor
-      - alertmanager:alertmanager
+    # - alertmanager:alertmanager
     depends_on:
       - cadvisor
     networks:
@@ -52,16 +52,16 @@ services:
       - back-tier
     restart: always
 
-  alertmanager:
-    image: prom/alertmanager
-    volumes:
-      - ./config/alertmanager:/etc/alertmanager
-    networks:
-      - back-tier
-    restart: always
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
+#  alertmanager:
+#    image: prom/alertmanager
+#    volumes:
+#      - ./config/alertmanager:/etc/alertmanager
+#    networks:
+#      - back-tier
+#    restart: always
+#    command:
+#      - '--config.file=/etc/alertmanager/config.yml'
+#      - '--storage.path=/alertmanager'
 
   cadvisor:
     image: google/cadvisor
@@ -141,6 +141,7 @@ services:
 
   postgres:
     image: postgres
+    shm_size: 1g
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
